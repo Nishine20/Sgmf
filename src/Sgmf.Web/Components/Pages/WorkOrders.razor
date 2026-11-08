@@ -1,0 +1,78 @@
+@page "/workorders"
+@inject ApiClient Api
+@inject Session Session
+
+<PageTitle>Órdenes de trabajo</PageTitle>
+<h1>Órdenes de trabajo</h1>
+
+@if (error is not null) { <p style="color:red">@error</p> }
+@if (items is null) { <p>Cargando…</p> }
+else { <WorkOrderTable Items="items" OnChanged="Load" /> }
+
+@if (Session.CanManage && assets is not null)
+{
+    <h2>Nueva orden</h2>
+    <p>
+        Activo
+        <select value="@assetId" @onchange="OnAssetChanged">
+            <option value="0">— seleccione —</option>
+            @foreach (var a in assets) { <option value="@a.Id">@a.Code – @a.Name</option> }
+        </select>
+        Tipo
+        <select @bind="type">
+            @foreach (var t in Enum.GetValues<WorkOrderType>()) { <option value="@t">@t</option> }
+        </select>
+        @if (type == WorkOrderType.Preventiva && plans.Count > 0)
+        {
+            <text>Plan</text>
+            <select @bind="planId">
+                <option value="0">— ninguno —</option>
+                @foreach (var p in plans) { <option value="@p.PlanId">@p.PlanName@(p.IsAlert ? " (ALERTA)" : "")</option> }
+            </select>
+        }
+    </p>
+    <p>Descripción <input @bind="description" size="50" /></p>
+    <button @onclick="Create">Abrir orden</button>
+}
+
+@code {
+    private List<WorkOrderDto>? items;
+    private List<AssetDto>? assets;
+    private List<PlanStatus> plans = [];
+    private string? error;
+    private int assetId, planId;
+    private WorkOrderType type = WorkOrderType.Preventiva;
+    private string description = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+        try { assets = await Api.Assets(); }
+        catch (ApiException ex) { error = ex.Message; }
+    }
+
+    private async Task Load()
+    {
+        try { items = await Api.WorkOrders(); }
+        catch (ApiException ex) { error = ex.Message; }
+    }
+
+    private async Task OnAssetChanged(ChangeEventArgs e)
+    {
+        assetId = int.Parse(e.Value?.ToString() ?? "0");
+        planId = 0;
+        plans = assetId == 0 ? [] : (await Api.Asset(assetId)).Plans;
+    }
+
+    private async Task Create()
+    {
+        error = null;
+        try
+        {
+            await Api.OpenWorkOrder(new WorkOrderInput(assetId, planId == 0 ? null : planId, type, description));
+            description = "";
+            await Load();
+        }
+        catch (ApiException ex) { error = ex.Message; }
+    }
+}

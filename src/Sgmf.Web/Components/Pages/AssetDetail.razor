@@ -1,0 +1,88 @@
+@page "/assets/{Id:int}"
+@inject ApiClient Api
+@inject Session Session
+
+<PageTitle>Hoja de vida</PageTitle>
+
+@if (error is not null) { <p style="color:red">@error</p> }
+@if (data is null) { <p>Cargando…</p> }
+else
+{
+    var a = data.Asset;
+    <h1>Hoja de vida – @a.Code @a.Name</h1>
+    <p>
+        @a.Type | @a.Status | @a.Brand @a.Model (@a.Year) | En servicio desde @a.InServiceSince.ToString("yyyy-MM-dd") |
+        Km: @a.CurrentKm.ToString("0.##") | Horas: @a.CurrentHours.ToString("0.##")
+    </p>
+
+    <h2>Planes preventivos</h2>
+    <table border="1" cellpadding="4">
+        <tr><th>Plan</th><th>Medida</th><th>Umbral</th><th>Uso desde último mtto.</th><th>%</th><th>Alerta</th></tr>
+        @foreach (var p in data.Plans)
+        {
+            <tr style="@(p.IsAlert ? "background:#ffd" : "")">
+                <td>@p.PlanName</td><td>@p.Metric</td><td>@p.Threshold.ToString("0.##")</td>
+                <td>@p.Used.ToString("0.##")</td><td>@p.Percent.ToString("0.#") %</td><td>@(p.IsAlert ? "SÍ" : "")</td>
+            </tr>
+        }
+    </table>
+    @if (Session.CanManage)
+    {
+        <p>
+            Nuevo plan: <input @bind="planName" placeholder="Nombre" />
+            <select @bind="metric">@foreach (var m in Enum.GetValues<PlanMetric>()) { <option value="@m">@m</option> }</select>
+            Umbral <input type="number" @bind="threshold" />
+            <button @onclick="AddPlan">Agregar</button>
+        </p>
+    }
+
+    <h2>Lecturas de uso</h2>
+    <table border="1" cellpadding="4">
+        <tr><th>Fecha</th><th>Km</th><th>Horas</th></tr>
+        @foreach (var r in data.Readings)
+        {
+            <tr><td>@r.ReadingDate.ToString("yyyy-MM-dd")</td><td>@r.Km.ToString("0.##")</td><td>@r.Hours.ToString("0.##")</td></tr>
+        }
+    </table>
+    @if (Session.CanManage)
+    {
+        <p>
+            Nueva lectura: <input type="date" @bind="readingDate" />
+            Km <input type="number" @bind="km" /> Horas <input type="number" @bind="hours" />
+            <button @onclick="AddReading">Registrar</button>
+        </p>
+    }
+
+    <h2>Órdenes de trabajo</h2>
+    <WorkOrderTable Items="data.WorkOrders" OnChanged="Load" />
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private AssetDetailDto? data;
+    private string? error;
+    private string planName = "";
+    private PlanMetric metric = PlanMetric.Km;
+    private decimal threshold;
+    private DateTime readingDate = DateTime.Today;
+    private decimal km, hours;
+
+    protected override Task OnParametersSetAsync() => Load();
+
+    private async Task Load()
+    {
+        try { data = await Api.Asset(Id); }
+        catch (ApiException ex) { error = ex.Message; }
+    }
+
+    private Task AddPlan() => Run(async () => { await Api.AddPlan(Id, new PlanInput(planName, metric, threshold)); planName = ""; });
+
+    private Task AddReading() => Run(() => Api.AddReading(Id, new ReadingInput(readingDate, km, hours)));
+
+    private async Task Run(Func<Task> action)
+    {
+        error = null;
+        try { await action(); await Load(); }
+        catch (ApiException ex) { error = ex.Message; }
+    }
+}

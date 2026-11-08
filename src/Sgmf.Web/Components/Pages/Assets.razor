@@ -1,0 +1,71 @@
+@page "/assets"
+@inject ApiClient Api
+@inject Session Session
+
+<PageTitle>Activos</PageTitle>
+<h1>Activos</h1>
+
+@if (error is not null) { <p style="color:red">@error</p> }
+@if (items is null) { <p>Cargando…</p> }
+else
+{
+    <table border="1" cellpadding="4">
+        <tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Estado</th><th>Marca / Modelo</th><th>Km</th><th>Horas</th></tr>
+        @foreach (var a in items)
+        {
+            <tr>
+                <td><a href="assets/@a.Id">@a.Code</a></td>
+                <td>@a.Name</td>
+                <td>@a.Type</td>
+                <td>@a.Status</td>
+                <td>@a.Brand @a.Model (@a.Year)</td>
+                <td>@a.CurrentKm.ToString("0.##")</td>
+                <td>@a.CurrentHours.ToString("0.##")</td>
+            </tr>
+        }
+    </table>
+}
+
+@if (Session.IsAdmin)
+{
+    <h2>Nuevo activo</h2>
+    <p>Código <input @bind="code" /> Nombre <input @bind="name" /></p>
+    <p>
+        Tipo
+        <select @bind="type">
+            @foreach (var t in Enum.GetValues<AssetType>()) { <option value="@t">@t</option> }
+        </select>
+        Marca <input @bind="brand" /> Modelo <input @bind="model" />
+    </p>
+    <p>Año <input type="number" @bind="year" /> En servicio desde <input type="date" @bind="since" /></p>
+    <button @onclick="Create">Crear</button>
+}
+
+@code {
+    private List<AssetDto>? items;
+    private string? error;
+    private string code = "", name = "", brand = "", model = "";
+    private AssetType type = AssetType.Vehiculo;
+    private int year = DateTime.Today.Year;
+    private DateTime since = DateTime.Today;
+
+    protected override Task OnInitializedAsync() => Load();
+
+    private async Task Load()
+    {
+        try { items = await Api.Assets(); }
+        catch (ApiException ex) { error = ex.Message; }
+    }
+
+    private async Task Create()
+    {
+        error = null;
+        try
+        {
+            await Api.CreateAsset(new AssetInput(code, name, type, brand, model, year, since));
+            code = name = "";
+            await Load();
+        }
+        catch (ApiException ex) { error = ex.Message; }
+    }
+}

@@ -1,0 +1,31 @@
+@page "/login"
+@inject ApiClient Api
+@inject Session Session
+@inject NavigationManager Nav
+
+<PageTitle>Ingreso</PageTitle>
+<h1>SGMF – Ingreso</h1>
+
+<p>Usuario <input @bind="user" /></p>
+<p>Contraseña <input type="password" @bind="password" /></p>
+<button @onclick="Submit">Ingresar</button>
+@if (error is not null) { <p style="color:red">@error</p> }
+
+@code {
+    private string user = "";
+    private string password = "";
+    private string? error;
+
+    protected override void OnInitialized() => Session.Clear();
+
+    private async Task Submit()
+    {
+        try
+        {
+            Session.Set(await Api.LoginAsync(user, password));
+            Nav.NavigateTo("");
+        }
+        catch (ApiException ex) { error = ex.Message; }
+        catch (HttpRequestException) { error = "No se pudo conectar con la API."; }
+    }
+}

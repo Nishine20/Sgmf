@@ -1,0 +1,50 @@
+@page "/"
+@inject ApiClient Api
+
+<PageTitle>Tablero</PageTitle>
+<h1>Tablero de disponibilidad</h1>
+
+@if (error is not null) { <p style="color:red">@error</p> }
+else if (data is null) { <p>Cargando…</p> }
+else
+{
+    <p>
+        Activos: <strong>@data.Total</strong> |
+        Disponibles: <strong>@data.Available</strong> |
+        En mantenimiento: <strong>@data.InMaintenance</strong> |
+        Fuera de servicio: <strong>@data.OutOfService</strong> |
+        <a href="alerts">Alertas: <strong>@data.AlertCount</strong></a>
+    </p>
+    <p>
+        Flota – Disponibilidad: <strong>@Fmt.Pct(data.Fleet.Availability)</strong> |
+        MTBF: <strong>@Fmt.Hours(data.Fleet.MtbfHours)</strong> |
+        MTTR: <strong>@Fmt.Hours(data.Fleet.MttrHours)</strong> |
+        Fallas: @data.Fleet.Failures
+    </p>
+    <table border="1" cellpadding="4">
+        <tr><th>Código</th><th>Activo</th><th>Estado</th><th>Disponibilidad</th><th>MTBF</th><th>MTTR</th><th>Fallas</th></tr>
+        @foreach (var a in data.Assets)
+        {
+            <tr>
+                <td><a href="assets/@a.AssetId">@a.Code</a></td>
+                <td>@a.Name</td>
+                <td>@a.Status</td>
+                <td>@Fmt.Pct(a.Indicators.Availability)</td>
+                <td>@Fmt.Hours(a.Indicators.MtbfHours)</td>
+                <td>@Fmt.Hours(a.Indicators.MttrHours)</td>
+                <td>@a.Indicators.Failures</td>
+            </tr>
+        }
+    </table>
+}
+
+@code {
+    private DashboardDto? data;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { data = await Api.Dashboard(); }
+        catch (ApiException ex) { error = ex.Message; }
+    }
+}

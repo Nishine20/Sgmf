@@ -1,0 +1,36 @@
+@page "/alerts"
+@inject ApiClient Api
+
+<PageTitle>Alertas</PageTitle>
+<h1>Alertas de mantenimiento (≥ 90 % del umbral)</h1>
+
+@if (error is not null) { <p style="color:red">@error</p> }
+else if (items is null) { <p>Cargando…</p> }
+else if (items.Count == 0) { <p>Sin alertas.</p> }
+else
+{
+    <table border="1" cellpadding="4">
+        <tr><th>Activo</th><th>Plan</th><th>Uso desde último mtto.</th><th>Umbral</th><th>%</th></tr>
+        @foreach (var a in items)
+        {
+            <tr style="@(a.Plan.Percent >= 100 ? "background:#fdd" : "background:#ffd")">
+                <td><a href="assets/@a.AssetId">@a.AssetCode – @a.AssetName</a></td>
+                <td>@a.Plan.PlanName</td>
+                <td>@a.Plan.Used.ToString("0.##") @a.Plan.Metric</td>
+                <td>@a.Plan.Threshold.ToString("0.##") @a.Plan.Metric</td>
+                <td>@a.Plan.Percent.ToString("0.#") %</td>
+            </tr>
+        }
+    </table>
+}
+
+@code {
+    private List<AlertDto>? items;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { items = await Api.Alerts(); }
+        catch (ApiException ex) { error = ex.Message; }
+    }
+}

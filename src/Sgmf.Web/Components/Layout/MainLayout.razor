@@ -1,0 +1,39 @@
+﻿@inherits LayoutComponentBase
+@inject Session Session
+@inject NavigationManager Nav
+
+@if (Session.IsLoggedIn)
+{
+    <nav style="padding:8px;border-bottom:1px solid #ccc">
+        <strong>SGMF</strong> |
+        <a href="">Tablero</a> |
+        <a href="alerts">Alertas</a> |
+        <a href="assets">Activos</a> |
+        <a href="workorders">Órdenes de trabajo</a> |
+        <span>@Session.UserName (@Session.Role)</span> |
+        <a href="login">Salir</a>
+    </nav>
+}
+
+<main style="padding:12px">
+    @if (allowed)
+    {
+        @Body
+    }
+</main>
+
+<div id="blazor-error-ui" data-nosnippet>
+    Ocurrió un error no controlado.
+    <a href="." class="reload">Recargar</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private bool allowed;
+
+    protected override void OnParametersSet()
+    {
+        allowed = Session.IsLoggedIn || Nav.ToBaseRelativePath(Nav.Uri).StartsWith("login");
+        if (!allowed) Nav.NavigateTo("login");
+    }
+}

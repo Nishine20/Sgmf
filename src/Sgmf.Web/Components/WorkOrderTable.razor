@@ -1,0 +1,40 @@
+@inject ApiClient Api
+@inject Session Session
+
+@if (error is not null) { <p style="color:red">@error</p> }
+<table border="1" cellpadding="4">
+    <tr><th>N.º</th><th>Activo</th><th>Tipo</th><th>Estado</th><th>Descripción</th><th>Abierta</th><th>Cerrada</th><th></th></tr>
+    @foreach (var w in Items)
+    {
+        <tr>
+            <td>@w.Id</td>
+            <td>@w.AssetCode</td>
+            <td>@w.Type</td>
+            <td>@w.Status</td>
+            <td>@w.Description</td>
+            <td>@w.OpenedAt.ToString("yyyy-MM-dd HH:mm")</td>
+            <td>@w.ClosedAt?.ToString("yyyy-MM-dd HH:mm")</td>
+            <td>
+                @if (Session.CanManage)
+                {
+                    @if (w.Status == WorkOrderStatus.Abierta) { <button @onclick="() => Run(() => Api.StartWorkOrder(w.Id))">Iniciar</button> }
+                    @if (w.Status == WorkOrderStatus.EnProceso) { <button @onclick="() => Run(() => Api.CloseWorkOrder(w.Id))">Cerrar</button> }
+                    @if (w.Status is WorkOrderStatus.Abierta or WorkOrderStatus.EnProceso) { <button @onclick="() => Run(() => Api.CancelWorkOrder(w.Id))">Cancelar</button> }
+                }
+            </td>
+        </tr>
+    }
+</table>
+
+@code {
+    [Parameter, EditorRequired] public List<WorkOrderDto> Items { get; set; } = [];
+    [Parameter] public EventCallback OnChanged { get; set; }
+    private string? error;
+
+    private async Task Run(Func<Task> action)
+    {
+        error = null;
+        try { await action(); await OnChanged.InvokeAsync(); }
+        catch (ApiException ex) { error = ex.Message; }
+    }
+}
