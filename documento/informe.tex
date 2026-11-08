@@ -1,0 +1,286 @@
+\documentclass[12pt,letterpaper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{mathptmx}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+
+\onehalfspacing
+\setlength{\parindent}{1.25cm}
+\captionsetup{font=small,labelfont=bf}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  frame=single,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true
+}
+
+% Inserta una captura si el archivo existe; si no, deja un recuadro de reserva.
+\newcommand{\captura}[3]{%
+  \begin{figure}[H]
+    \centering
+    \IfFileExists{imagenes/#1.png}{%
+      \includegraphics[width=0.92\textwidth]{imagenes/#1.png}}{%
+      \fbox{\parbox{0.85\textwidth}{\centering\vspace{2cm}Captura pendiente: \texttt{imagenes/#1.png}\vspace{2cm}}}}
+    \caption{#2}\label{#3}
+  \end{figure}}
+
+\begin{document}
+
+% ---------------- Portada ----------------
+\begin{titlepage}
+  \centering
+  \vspace*{2cm}
+  {\large Corporación Universitaria Iberoamericana\par}
+  {\large Ingeniería de Software\par}
+  \vspace{2.5cm}
+  {\Large\bfseries Prototipo funcional del Sistema de Gestión de Mantenimiento y Disponibilidad de Flota (SGMF)\par}
+  \vspace{2.5cm}
+  Nicolas Eduardo Nieto Gaitan\par
+  % TODO: agregar a los demás integrantes del grupo, uno por línea.
+  \vspace{2cm}
+  Proyecto de software\par
+  Ana Milena Mosquera Sevilla\par
+  \vspace{2cm}
+  8 de noviembre de 2026\par
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ---------------- Introducción ----------------
+\section{Introducción}
+
+Este documento presenta el prototipo funcional del Sistema de Gestión de Mantenimiento y Disponibilidad de Flota (SGMF), cuya formulación se desarrolló en la actividad anterior. El sistema centraliza la hoja de vida de vehículos y maquinaria de alquiler, programa el mantenimiento preventivo, genera alertas de vencimiento y calcula indicadores de confiabilidad.
+
+El objetivo del prototipo es validar con evidencia ejecutable las reglas de negocio más críticas del proyecto: la alerta al 90\,\% del umbral de un plan de mantenimiento y el cálculo de disponibilidad, tiempo medio entre fallas (MTBF) y tiempo medio de reparación (MTTR). El documento describe el tipo de prototipo elegido, las fases de su ciclo de vida, las instrucciones de instalación y las capturas de pantalla.
+
+% ---------------- Tipo de prototipo ----------------
+\section{Tipo de prototipo}
+
+Se construyó un prototipo funcional de tipo \emph{vertical}: implementa pocas funciones, pero atraviesa todas las capas del sistema (interfaz, API, reglas de negocio y base de datos). Se eligió este enfoque porque el riesgo principal del proyecto está en las reglas de cálculo, no en la apariencia, y una versión que solo mostrara pantallas no permitiría verificarlas.
+
+El prototipo es \emph{evolutivo}: su código está organizado para convertirse en la base del producto final, en lugar de descartarse. Para ello, las reglas de negocio viven en una biblioteca independiente de la interfaz y de la base de datos, lo que permite probarlas de forma automática.
+
+% ---------------- Ciclo de vida ----------------
+\section{Ciclo de vida del prototipo}
+
+La Tabla~\ref{tab:ciclo} resume cómo se aplicó cada fase del ciclo de vida del prototipo.
+
+\begin{table}[H]
+  \centering
+  \caption{Fases del ciclo de vida aplicadas al SGMF}\label{tab:ciclo}
+  \begin{tabularx}{\textwidth}{@{}lX@{}}
+    \toprule
+    Fase & Aplicación en el proyecto \\
+    \midrule
+    Recolección de requisitos & Se tomaron del documento de formulación: roles, activos, planes preventivos, órdenes de trabajo, alerta al 90\,\% y tablero de indicadores. Se excluyeron facturación, exportación de reportes, correo electrónico, calendario de contratos, integración con el ERP y aplicación móvil. \\
+    Diseño rápido & Arquitectura de cuatro proyectos y modelo de datos con cinco entidades principales (sección~\ref{sec:diseno}). \\
+    Construcción & Cuatro incrementos: base y seguridad; activos y órdenes de trabajo; alertas; indicadores y tablero. \\
+    Evaluación & Pruebas unitarias de las reglas de negocio y recorrido manual con los tres roles (sección~\ref{sec:evaluacion}). \\
+    Refinamiento & Se rediseñó la interfaz con Bootstrap y se agregaron bordes de grilla a las tablas. \\
+    Entrega & Código fuente, instrucciones de instalación y capturas de pantalla (secciones~\ref{sec:instalacion} y~\ref{sec:capturas}). \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+% ---------------- Diseño ----------------
+\section{Diseño del prototipo}\label{sec:diseno}
+
+\subsection{Arquitectura}
+
+La solución se compone de cuatro proyectos escritos en C\# sobre .NET 10:
+
+\begin{itemize}
+  \item \textbf{Sgmf.Core}: entidades y reglas de negocio puras. No depende de ningún otro proyecto.
+  \item \textbf{Sgmf.Api}: ASP.NET Core Web API con autenticación JWT, acceso a datos con Entity Framework Core sobre SQL Server y un generador de datos de prueba.
+  \item \textbf{Sgmf.Web}: interfaz en Blazor Web App (modo interactivo de servidor), que consume la API mediante un cliente HTTP tipado.
+  \item \textbf{Sgmf.Tests}: pruebas unitarias con xUnit.
+\end{itemize}
+
+Los endpoints de la API y los componentes de la interfaz no contienen lógica de negocio; solo delegan en las reglas de \texttt{Sgmf.Core}.
+
+\subsection{Roles y permisos}
+
+\begin{table}[H]
+  \centering
+  \caption{Permisos por rol}\label{tab:roles}
+  \begin{tabularx}{\textwidth}{@{}lX@{}}
+    \toprule
+    Rol & Permisos \\
+    \midrule
+    Administrador & Todo, incluido el registro de activos. \\
+    JefeMantenimiento & Consulta; registro de planes, lecturas y órdenes de trabajo. \\
+    Comercial & Solo consulta (tablero, activos y alertas). \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Reglas de negocio}
+
+\begin{itemize}
+  \item \textbf{Alerta:} se genera cuando (lectura actual $-$ lectura del último mantenimiento) $\geq 0{,}9 \times$ umbral del plan. Aplica a planes por kilometraje, horas de uso o días.
+  \item \textbf{MTBF} $=$ tiempo operativo total $/$ número de fallas.
+  \item \textbf{MTTR} $=$ tiempo total de reparación $/$ número de reparaciones correctivas.
+  \item \textbf{Disponibilidad} $=$ MTBF $/$ (MTBF $+$ MTTR).
+\end{itemize}
+
+Una falla es una orden de trabajo correctiva no cancelada. Si un activo no tiene fallas, su disponibilidad se reporta como 100\,\%.
+
+% ---------------- Construcción ----------------
+\section{Construcción}
+
+\begin{table}[H]
+  \centering
+  \caption{Incrementos construidos}\label{tab:incrementos}
+  \begin{tabularx}{\textwidth}{@{}cX@{}}
+    \toprule
+    N.º & Contenido \\
+    \midrule
+    1 & Solución, modelo de datos, migraciones, autenticación JWT con roles y generador de datos de prueba. \\
+    2 & Activos, hoja de vida, planes preventivos, lecturas de uso y órdenes de trabajo con estados. \\
+    3 & Alertas al 90\,\% del umbral, con pruebas. \\
+    4 & Indicadores de disponibilidad, MTBF y MTTR, tablero y pruebas. \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Los datos son sintéticos y deterministas: diez activos (cinco vehículos y cinco máquinas) con lecturas, planes e historial de órdenes de trabajo, y un usuario por rol. El generador es idempotente, de modo que puede ejecutarse varias veces sin duplicar datos.
+
+% ---------------- Evaluación ----------------
+\section{Evaluación y refinamiento}\label{sec:evaluacion}
+
+\subsection{Pruebas automáticas}
+
+Se escribieron 16 pruebas unitarias sobre las reglas de negocio, que pasan en su totalidad. Cubren:
+
+\begin{itemize}
+  \item el límite de la alerta (89\,\% no alerta; 90\,\% alerta) para kilometraje, horas y días;
+  \item el reinicio de la línea base al cerrar un mantenimiento preventivo;
+  \item el rechazo de lecturas decrecientes;
+  \item el ciclo de vida de una orden de trabajo y su efecto en el estado del activo;
+  \item el cálculo de MTBF, MTTR y disponibilidad con valores calculados a mano, incluidos los casos sin fallas, con falla abierta y el agregado de la flota.
+\end{itemize}
+
+\subsection{Recorrido manual}
+
+Se recorrió el sistema con los tres roles. Se comprobó que el rol Comercial recibe un rechazo al intentar crear una orden de trabajo y que el rol JefeMantenimiento sí puede hacerlo. También se verificó que el tablero refleja el estado de los activos tras abrir y cancelar una orden.
+
+\subsection{Refinamiento}
+
+Tras la primera evaluación se rediseñó la interfaz con el framework Bootstrap (barra de navegación, tarjetas de indicadores, etiquetas de color para el estado de los activos) y se agregaron bordes de grilla a las tablas para facilitar su lectura.
+
+\subsection{Limitaciones}
+
+Por tratarse de un prototipo, no se implementaron las alertas por correo electrónico, el calendario de disponibilidad con asignación a contratos, la exportación de reportes en PDF y CSV, la asignación de responsables a las órdenes de trabajo, ni la prueba de rendimiento con 25 usuarios concurrentes. Tampoco se midió la cobertura de pruebas. Estos elementos se mantienen en el alcance del producto final.
+
+% ---------------- Instalación ----------------
+\section{Instrucciones de instalación}\label{sec:instalacion}
+
+\subsection{Requisitos}
+
+\begin{itemize}
+  \item .NET 10 SDK.
+  \item SQL Server LocalDB (incluido con Visual Studio) o una instancia de SQL Server.
+  \item Opcional: Visual Studio 2022 versión 17.14 o posterior.
+\end{itemize}
+
+\subsection{Obtención del código}
+
+El código fuente está disponible en: \url{TODO-ENLACE-AL-REPOSITORIO}.
+
+\begin{lstlisting}
+git clone TODO-ENLACE-AL-REPOSITORIO
+cd Sgmf
+\end{lstlisting}
+
+\subsection{Configuración}
+
+Los secretos no se incluyen en el repositorio. Cree el archivo \texttt{src/Sgmf.Api/appsettings.Development.json} con el siguiente contenido, ajustando la conexión si no usa LocalDB:
+
+\begin{lstlisting}
+{
+  "ConnectionStrings": {
+    "Default": "Server=(localdb)\\MSSQLLocalDB;Database=Sgmf;Trusted_Connection=True;TrustServerCertificate=True"
+  },
+  "Jwt": { "Key": "clave-de-desarrollo-de-al-menos-32-caracteres-0123456789" },
+  "Seed": { "Password": "Sgmf#Demo2026" }
+}
+\end{lstlisting}
+
+\subsection{Ejecución}
+
+La base de datos se crea y se llena con datos de prueba automáticamente al iniciar la API. En dos terminales distintas:
+
+\begin{lstlisting}
+cd src/Sgmf.Api
+dotnet run --urls http://localhost:5282
+\end{lstlisting}
+
+\begin{lstlisting}
+cd src/Sgmf.Web
+dotnet run --urls http://localhost:5235
+\end{lstlisting}
+
+Abra \url{http://localhost:5235} en el navegador. Para ejecutar las pruebas, use \texttt{dotnet test} en la raíz de la solución.
+
+\textbf{Visual Studio:} abra \texttt{Sgmf.sln}, configure como proyectos de inicio múltiples \texttt{Sgmf.Api} y \texttt{Sgmf.Web}, seleccione el perfil \emph{http} en ambos y pulse F5.
+
+\subsection{Usuarios de prueba}
+
+\begin{table}[H]
+  \centering
+  \caption{Usuarios sintéticos del prototipo}\label{tab:usuarios}
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    Usuario & Rol & Contraseña \\
+    \midrule
+    admin & Administrador & \texttt{Sgmf\#Demo2026} \\
+    jefe & JefeMantenimiento & \texttt{Sgmf\#Demo2026} \\
+    comercial & Comercial & \texttt{Sgmf\#Demo2026} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% ---------------- Capturas ----------------
+\section{Capturas de pantalla}\label{sec:capturas}
+
+Las capturas se guardan en la carpeta \texttt{imagenes/} con los nombres indicados; mientras no existan, el documento muestra un recuadro de reserva.
+
+\captura{login}{Pantalla de ingreso}{fig:login}
+\captura{tablero}{Tablero de disponibilidad con MTBF y MTTR de la flota}{fig:tablero}
+\captura{alertas}{Alertas de mantenimiento al 90\,\% del umbral}{fig:alertas}
+\captura{activos}{Listado de activos}{fig:activos}
+\captura{hoja-de-vida}{Hoja de vida de un activo con planes, lecturas y órdenes de trabajo}{fig:hoja}
+\captura{ordenes}{Órdenes de trabajo y formulario de apertura}{fig:ordenes}
+
+% ---------------- Conclusiones ----------------
+\section{Conclusiones}
+
+El prototipo demuestra de extremo a extremo las dos reglas que sustentan el valor del proyecto: la alerta preventiva al 90\,\% del umbral y el cálculo de disponibilidad, MTBF y MTTR. Al mantener las reglas de negocio aisladas de la interfaz y de la base de datos, fue posible verificarlas con pruebas automáticas y dejar una base reutilizable para el producto final.
+
+Quedan pendientes los elementos descritos en la sección de limitaciones, que deberán abordarse en las siguientes iteraciones del proyecto.
+
+% ---------------- Referencias ----------------
+\section*{Referencias}
+\addcontentsline{toc}{section}{Referencias}
+
+\setlength{\parindent}{0pt}
+\hangindent=1.25cm Gual Ortí, J. (2016). \emph{Fundamentos del modelado y prototipado virtual en el diseño de productos}. Universitat Jaume I, Servei de Comunicació i Publicacions.
+
+\medskip
+\hangindent=1.25cm Suárez, E. C. (2017). Prototipo, contexto e ingeniería del software. \emph{Estudios de Postgrado en Sistemas de Información}, 2--20.
+
+\end{document}

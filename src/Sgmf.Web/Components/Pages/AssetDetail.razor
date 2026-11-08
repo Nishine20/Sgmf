@@ -16,7 +16,7 @@ else
     </p>
 
     <h2 class="h5 mt-4">Planes preventivos</h2>
-    <table class="table table-sm table-striped table-hover align-middle">
+    <table class="table table-sm table-bordered table-striped table-hover align-middle">
         <tr><th>Plan</th><th>Medida</th><th>Umbral</th><th>Uso desde último mtto.</th><th>%</th><th>Alerta</th></tr>
         @foreach (var p in data.Plans)
         {
@@ -37,7 +37,7 @@ else
     }
 
     <h2 class="h5 mt-4">Lecturas de uso</h2>
-    <table class="table table-sm table-striped table-hover align-middle">
+    <table class="table table-sm table-bordered table-striped table-hover align-middle">
         <tr><th>Fecha</th><th>Km</th><th>Horas</th></tr>
         @foreach (var r in data.Readings)
         {

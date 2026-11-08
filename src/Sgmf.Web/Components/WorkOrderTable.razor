@@ -2,7 +2,7 @@
 @inject Session Session
 
 @if (error is not null) { <div class="alert alert-danger py-2">@error</div> }
-<table class="table table-sm table-striped table-hover align-middle">
+<table class="table table-sm table-bordered table-striped table-hover align-middle">
     <tr><th>N.º</th><th>Activo</th><th>Tipo</th><th>Estado</th><th>Descripción</th><th>Abierta</th><th>Cerrada</th><th></th></tr>
     @foreach (var w in Items)
     {
