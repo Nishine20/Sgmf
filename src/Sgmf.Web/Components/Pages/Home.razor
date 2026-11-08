@@ -2,33 +2,31 @@
 @inject ApiClient Api
 
 <PageTitle>Tablero</PageTitle>
-<h1>Tablero de disponibilidad</h1>
+<h1 class="h3 mb-3">Tablero de disponibilidad</h1>
 
-@if (error is not null) { <p style="color:red">@error</p> }
+@if (error is not null) { <div class="alert alert-danger py-2">@error</div> }
 else if (data is null) { <p>Cargando…</p> }
 else
 {
-    <p>
-        Activos: <strong>@data.Total</strong> |
-        Disponibles: <strong>@data.Available</strong> |
-        En mantenimiento: <strong>@data.InMaintenance</strong> |
-        Fuera de servicio: <strong>@data.OutOfService</strong> |
-        <a href="alerts">Alertas: <strong>@data.AlertCount</strong></a>
-    </p>
-    <p>
-        Flota – Disponibilidad: <strong>@Fmt.Pct(data.Fleet.Availability)</strong> |
-        MTBF: <strong>@Fmt.Hours(data.Fleet.MtbfHours)</strong> |
-        MTTR: <strong>@Fmt.Hours(data.Fleet.MttrHours)</strong> |
-        Fallas: @data.Fleet.Failures
-    </p>
-    <table border="1" cellpadding="4">
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><div class="display-6">@data.Available</div><div class="text-muted">Disponibles</div></div></div></div>
+        <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><div class="display-6">@data.InMaintenance</div><div class="text-muted">En mantenimiento</div></div></div></div>
+        <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><div class="display-6">@data.OutOfService</div><div class="text-muted">Fuera de servicio</div></div></div></div>
+        <div class="col-6 col-md-3"><a href="alerts" class="text-decoration-none"><div class="card text-center @(data.AlertCount > 0 ? "border-warning" : "")"><div class="card-body"><div class="display-6">@data.AlertCount</div><div class="text-muted">Alertas</div></div></div></a></div>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="card"><div class="card-body"><div class="text-muted small">Disponibilidad de la flota</div><div class="h3 mb-0">@Fmt.Pct(data.Fleet.Availability)</div></div></div></div>
+        <div class="col-md-4"><div class="card"><div class="card-body"><div class="text-muted small">MTBF</div><div class="h3 mb-0">@Fmt.Hours(data.Fleet.MtbfHours)</div></div></div></div>
+        <div class="col-md-4"><div class="card"><div class="card-body"><div class="text-muted small">MTTR</div><div class="h3 mb-0">@Fmt.Hours(data.Fleet.MttrHours)</div></div></div></div>
+    </div>
+    <table class="table table-sm table-striped table-hover align-middle">
         <tr><th>Código</th><th>Activo</th><th>Estado</th><th>Disponibilidad</th><th>MTBF</th><th>MTTR</th><th>Fallas</th></tr>
         @foreach (var a in data.Assets)
         {
             <tr>
                 <td><a href="assets/@a.AssetId">@a.Code</a></td>
                 <td>@a.Name</td>
-                <td>@a.Status</td>
+                <td><span class="badge @Fmt.StatusClass(a.Status)">@a.Status</span></td>
                 <td>@Fmt.Pct(a.Indicators.Availability)</td>
                 <td>@Fmt.Hours(a.Indicators.MtbfHours)</td>
                 <td>@Fmt.Hours(a.Indicators.MttrHours)</td>

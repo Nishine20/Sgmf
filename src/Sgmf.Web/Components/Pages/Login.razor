@@ -4,12 +4,23 @@
 @inject NavigationManager Nav
 
 <PageTitle>Ingreso</PageTitle>
-<h1>SGMF – Ingreso</h1>
 
-<p>Usuario <input @bind="user" /></p>
-<p>Contraseña <input type="password" @bind="password" /></p>
-<button @onclick="Submit">Ingresar</button>
-@if (error is not null) { <p style="color:red">@error</p> }
+<div class="card shadow-sm mx-auto mt-5" style="max-width:380px">
+    <div class="card-body p-4">
+        <h1 class="h4 mb-1">SGMF</h1>
+        <p class="text-muted small">Gestión de mantenimiento y disponibilidad de flota</p>
+        <div class="mb-3">
+            <label class="form-label">Usuario</label>
+            <input class="form-control" @bind="user" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Contraseña</label>
+            <input type="password" class="form-control" @bind="password" />
+        </div>
+        <button class="btn btn-primary w-100" @onclick="Submit">Ingresar</button>
+        @if (error is not null) { <div class="alert alert-danger py-2 mt-3 mb-0">@error</div> }
+    </div>
+</div>
 
 @code {
     private string user = "";

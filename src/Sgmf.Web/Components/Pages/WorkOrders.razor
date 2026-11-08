@@ -3,36 +3,36 @@
 @inject Session Session
 
 <PageTitle>Órdenes de trabajo</PageTitle>
-<h1>Órdenes de trabajo</h1>
+<h1 class="h3 mb-3">Órdenes de trabajo</h1>
 
-@if (error is not null) { <p style="color:red">@error</p> }
+@if (error is not null) { <div class="alert alert-danger py-2">@error</div> }
 @if (items is null) { <p>Cargando…</p> }
 else { <WorkOrderTable Items="items" OnChanged="Load" /> }
 
 @if (Session.CanManage && assets is not null)
 {
-    <h2>Nueva orden</h2>
-    <p>
+    <h2 class="h5 mt-4">Nueva orden</h2>
+    <p class="d-flex flex-wrap gap-2 align-items-center">
         Activo
-        <select value="@assetId" @onchange="OnAssetChanged">
+        <select class="form-select form-select-sm d-inline-block w-auto" value="@assetId" @onchange="OnAssetChanged">
             <option value="0">— seleccione —</option>
             @foreach (var a in assets) { <option value="@a.Id">@a.Code – @a.Name</option> }
         </select>
         Tipo
-        <select @bind="type">
+        <select class="form-select form-select-sm d-inline-block w-auto" @bind="type">
             @foreach (var t in Enum.GetValues<WorkOrderType>()) { <option value="@t">@t</option> }
         </select>
         @if (type == WorkOrderType.Preventiva && plans.Count > 0)
         {
             <text>Plan</text>
-            <select @bind="planId">
+            <select class="form-select form-select-sm d-inline-block w-auto" @bind="planId">
                 <option value="0">— ninguno —</option>
                 @foreach (var p in plans) { <option value="@p.PlanId">@p.PlanName@(p.IsAlert ? " (ALERTA)" : "")</option> }
             </select>
         }
     </p>
-    <p>Descripción <input @bind="description" size="50" /></p>
-    <button @onclick="Create">Abrir orden</button>
+    <p class="d-flex gap-2 align-items-center">Descripción <input class="form-control form-control-sm d-inline-block w-auto" @bind="description" size="50" /></p>
+    <button class="btn btn-sm btn-primary" @onclick="Create">Abrir orden</button>
 }
 
 @code {

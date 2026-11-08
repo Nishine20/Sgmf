@@ -3,13 +3,13 @@
 @inject Session Session
 
 <PageTitle>Activos</PageTitle>
-<h1>Activos</h1>
+<h1 class="h3 mb-3">Activos</h1>
 
-@if (error is not null) { <p style="color:red">@error</p> }
+@if (error is not null) { <div class="alert alert-danger py-2">@error</div> }
 @if (items is null) { <p>Cargando…</p> }
 else
 {
-    <table border="1" cellpadding="4">
+    <table class="table table-sm table-striped table-hover align-middle">
         <tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Estado</th><th>Marca / Modelo</th><th>Km</th><th>Horas</th></tr>
         @foreach (var a in items)
         {
@@ -17,7 +17,7 @@ else
                 <td><a href="assets/@a.Id">@a.Code</a></td>
                 <td>@a.Name</td>
                 <td>@a.Type</td>
-                <td>@a.Status</td>
+                <td><span class="badge @Fmt.StatusClass(a.Status)">@a.Status</span></td>
                 <td>@a.Brand @a.Model (@a.Year)</td>
                 <td>@a.CurrentKm.ToString("0.##")</td>
                 <td>@a.CurrentHours.ToString("0.##")</td>
@@ -28,17 +28,17 @@ else
 
 @if (Session.IsAdmin)
 {
-    <h2>Nuevo activo</h2>
-    <p>Código <input @bind="code" /> Nombre <input @bind="name" /></p>
-    <p>
+    <h2 class="h5 mt-4">Nuevo activo</h2>
+    <p class="d-flex flex-wrap gap-2 align-items-center">Código <input class="form-control form-control-sm d-inline-block w-auto" @bind="code" /> Nombre <input class="form-control form-control-sm d-inline-block w-auto" @bind="name" /></p>
+    <p class="d-flex flex-wrap gap-2 align-items-center">
         Tipo
-        <select @bind="type">
+        <select class="form-select form-select-sm d-inline-block w-auto" @bind="type">
             @foreach (var t in Enum.GetValues<AssetType>()) { <option value="@t">@t</option> }
         </select>
-        Marca <input @bind="brand" /> Modelo <input @bind="model" />
+        Marca <input class="form-control form-control-sm d-inline-block w-auto" @bind="brand" /> Modelo <input class="form-control form-control-sm d-inline-block w-auto" @bind="model" />
     </p>
-    <p>Año <input type="number" @bind="year" /> En servicio desde <input type="date" @bind="since" /></p>
-    <button @onclick="Create">Crear</button>
+    <p class="d-flex flex-wrap gap-2 align-items-center">Año <input type="number" class="form-control form-control-sm d-inline-block w-auto" @bind="year" /> En servicio desde <input type="date" class="form-control form-control-sm d-inline-block w-auto" @bind="since" /></p>
+    <button class="btn btn-sm btn-primary" @onclick="Create">Crear</button>
 }
 
 @code {

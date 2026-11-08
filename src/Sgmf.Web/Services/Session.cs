@@ -20,5 +20,11 @@ public class Session
 public static class Fmt
 {
     public static string Hours(double? v) => v is null ? "—" : $"{v:0.0} h";
+    public static string StatusClass(AssetStatus s) => s switch
+    {
+        AssetStatus.Disponible => "text-bg-success",
+        AssetStatus.EnMantenimiento => "text-bg-warning",
+        _ => "text-bg-danger"
+    };
     public static string Pct(double? v) => v is null ? "—" : $"{v * 100:0.00} %";
 }

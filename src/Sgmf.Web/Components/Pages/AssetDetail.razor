@@ -4,23 +4,23 @@
 
 <PageTitle>Hoja de vida</PageTitle>
 
-@if (error is not null) { <p style="color:red">@error</p> }
+@if (error is not null) { <div class="alert alert-danger py-2">@error</div> }
 @if (data is null) { <p>Cargando…</p> }
 else
 {
     var a = data.Asset;
-    <h1>Hoja de vida – @a.Code @a.Name</h1>
-    <p>
+    <h1 class="h3 mb-3">Hoja de vida – @a.Code @a.Name</h1>
+    <p class="d-flex flex-wrap gap-2 align-items-center">
         @a.Type | @a.Status | @a.Brand @a.Model (@a.Year) | En servicio desde @a.InServiceSince.ToString("yyyy-MM-dd") |
         Km: @a.CurrentKm.ToString("0.##") | Horas: @a.CurrentHours.ToString("0.##")
     </p>
 
-    <h2>Planes preventivos</h2>
-    <table border="1" cellpadding="4">
+    <h2 class="h5 mt-4">Planes preventivos</h2>
+    <table class="table table-sm table-striped table-hover align-middle">
         <tr><th>Plan</th><th>Medida</th><th>Umbral</th><th>Uso desde último mtto.</th><th>%</th><th>Alerta</th></tr>
         @foreach (var p in data.Plans)
         {
-            <tr style="@(p.IsAlert ? "background:#ffd" : "")">
+            <tr class="@(p.IsAlert ? "table-warning" : "")">
                 <td>@p.PlanName</td><td>@p.Metric</td><td>@p.Threshold.ToString("0.##")</td>
                 <td>@p.Used.ToString("0.##")</td><td>@p.Percent.ToString("0.#") %</td><td>@(p.IsAlert ? "SÍ" : "")</td>
             </tr>
@@ -28,16 +28,16 @@ else
     </table>
     @if (Session.CanManage)
     {
-        <p>
-            Nuevo plan: <input @bind="planName" placeholder="Nombre" />
-            <select @bind="metric">@foreach (var m in Enum.GetValues<PlanMetric>()) { <option value="@m">@m</option> }</select>
-            Umbral <input type="number" @bind="threshold" />
-            <button @onclick="AddPlan">Agregar</button>
+        <p class="d-flex flex-wrap gap-2 align-items-center">
+            Nuevo plan: <input class="form-control form-control-sm d-inline-block w-auto" @bind="planName" placeholder="Nombre" />
+            <select class="form-select form-select-sm d-inline-block w-auto" @bind="metric">@foreach (var m in Enum.GetValues<PlanMetric>()) { <option value="@m">@m</option> }</select>
+            Umbral <input type="number" class="form-control form-control-sm d-inline-block w-auto" @bind="threshold" />
+            <button class="btn btn-sm btn-primary" @onclick="AddPlan">Agregar</button>
         </p>
     }
 
-    <h2>Lecturas de uso</h2>
-    <table border="1" cellpadding="4">
+    <h2 class="h5 mt-4">Lecturas de uso</h2>
+    <table class="table table-sm table-striped table-hover align-middle">
         <tr><th>Fecha</th><th>Km</th><th>Horas</th></tr>
         @foreach (var r in data.Readings)
         {
@@ -46,14 +46,14 @@ else
     </table>
     @if (Session.CanManage)
     {
-        <p>
-            Nueva lectura: <input type="date" @bind="readingDate" />
-            Km <input type="number" @bind="km" /> Horas <input type="number" @bind="hours" />
-            <button @onclick="AddReading">Registrar</button>
+        <p class="d-flex flex-wrap gap-2 align-items-center">
+            Nueva lectura: <input type="date" class="form-control form-control-sm d-inline-block w-auto" @bind="readingDate" />
+            Km <input type="number" class="form-control form-control-sm d-inline-block w-auto" @bind="km" /> Horas <input type="number" class="form-control form-control-sm d-inline-block w-auto" @bind="hours" />
+            <button class="btn btn-sm btn-primary" @onclick="AddReading">Registrar</button>
         </p>
     }
 
-    <h2>Órdenes de trabajo</h2>
+    <h2 class="h5 mt-4">Órdenes de trabajo</h2>
     <WorkOrderTable Items="data.WorkOrders" OnChanged="Load" />
 }
 

@@ -4,18 +4,20 @@
 
 @if (Session.IsLoggedIn)
 {
-    <nav style="padding:8px;border-bottom:1px solid #ccc">
-        <strong>SGMF</strong> |
-        <a href="">Tablero</a> |
-        <a href="alerts">Alertas</a> |
-        <a href="assets">Activos</a> |
-        <a href="workorders">Órdenes de trabajo</a> |
-        <span>@Session.UserName (@Session.Role)</span> |
-        <a href="login">Salir</a>
+    <nav class="navbar navbar-expand navbar-dark bg-dark px-3">
+        <a class="navbar-brand" href="">SGMF</a>
+        <div class="navbar-nav me-auto">
+            <a class="nav-link" href="">Tablero</a>
+            <a class="nav-link" href="alerts">Alertas</a>
+            <a class="nav-link" href="assets">Activos</a>
+            <a class="nav-link" href="workorders">Órdenes de trabajo</a>
+        </div>
+        <span class="navbar-text me-3">@Session.UserName <span class="badge text-bg-secondary">@Session.Role</span></span>
+        <a class="btn btn-sm btn-outline-light" href="login">Salir</a>
     </nav>
 }
 
-<main style="padding:12px">
+<main class="container py-4">
     @if (allowed)
     {
         @Body

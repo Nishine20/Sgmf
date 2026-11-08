@@ -1,8 +1,8 @@
 @inject ApiClient Api
 @inject Session Session
 
-@if (error is not null) { <p style="color:red">@error</p> }
-<table border="1" cellpadding="4">
+@if (error is not null) { <div class="alert alert-danger py-2">@error</div> }
+<table class="table table-sm table-striped table-hover align-middle">
     <tr><th>N.º</th><th>Activo</th><th>Tipo</th><th>Estado</th><th>Descripción</th><th>Abierta</th><th>Cerrada</th><th></th></tr>
     @foreach (var w in Items)
     {
@@ -17,9 +17,9 @@
             <td>
                 @if (Session.CanManage)
                 {
-                    @if (w.Status == WorkOrderStatus.Abierta) { <button @onclick="() => Run(() => Api.StartWorkOrder(w.Id))">Iniciar</button> }
-                    @if (w.Status == WorkOrderStatus.EnProceso) { <button @onclick="() => Run(() => Api.CloseWorkOrder(w.Id))">Cerrar</button> }
-                    @if (w.Status is WorkOrderStatus.Abierta or WorkOrderStatus.EnProceso) { <button @onclick="() => Run(() => Api.CancelWorkOrder(w.Id))">Cancelar</button> }
+                    @if (w.Status == WorkOrderStatus.Abierta) { <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => Run(() => Api.StartWorkOrder(w.Id))">Iniciar</button> }
+                    @if (w.Status == WorkOrderStatus.EnProceso) { <button class="btn btn-sm btn-outline-success me-1" @onclick="() => Run(() => Api.CloseWorkOrder(w.Id))">Cerrar</button> }
+                    @if (w.Status is WorkOrderStatus.Abierta or WorkOrderStatus.EnProceso) { <button class="btn btn-sm btn-outline-danger" @onclick="() => Run(() => Api.CancelWorkOrder(w.Id))">Cancelar</button> }
                 }
             </td>
         </tr>
